@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>personal website</title>
+    <style>
+        body{
+            margin: 0px;
+            background-image: url("./image2.jpeg");
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+        .container {
+            display: flex; /* or inline-flex */
+        }
+        .pointer{
+            cursor:pointer
+        }
+        .text{
+            position:relative;
+            left:10px
+        }
+        .box1{
+            font-size: 40px;
+            color: white;
+            position:relative;
+            width:170px;
+            height:45px;
+            left:15px;
+            top:15px;
+            border: 5px solid;
+            border-radius: 10px;
+            border-style: ridge;
+        }
+        .button{
+            font-size:30px;
+            position:relative;
+            left: 380px;
+            top: 70px;
+            border-radius: 15px;
+            border:3px rgba(127, 187, 255, 0.57);
+            border-style: groove;
+            background-color: mediumpurple;
+        }
+        #image{
+            position: absolute;
+            width:100%;
+            height:100%;
+            margin: auto;
+            border-radius: 15px;
+        }
+        #game{
+            color: white;
+            font-size:60px;
+            width:100%;
+            height:100%;
+            margin: auto;
+
+        }
+
+        #table {
+            margin: auto;
+            table-layout:fixed;
+            text-align: center;
+        }
+        .column{
+            width: 85px;
+            height: 85px;
+            position: relative;
+            top:-30px;
+            left: -30px;
+            border: 3px solid black;
+            border-radius: 15px;
+            background-color: rgba(127, 187, 255, 0.57);
+            padding: 10px;
+
+        }
+        #canvas-id{
+            position: absolute;
+            width:100%;
+            height:100%;
+            opacity:0.3;
+            overflow:hidden;
+        }
+
+
+
+    </style>
+</head>
+
+
+<body id = 'body'>
+
+<div id="game">
+    <canvas id="canvas-id"></canvas>
+    <div class="container">
+        <div class="box1">
+            <span style="position:relative; left:10px">Time: </span>
+            <span id="timer" class="text">60</span>
+        </div>
+
+    </div>
+
+    <div class="container">
+    <table id="table" class="pointer"></table>
+    </div>
+
+    <button id="start" class="button pointer" onclick="start(this)">START </button>
+    <button id="restart" class="button pointer" onclick="restart(this)">RESTART </button>
+</div>
+
+
+<script>
+    class Ball{
+        constructor(x, y, radius = 20, color ='red', speed = {x: 2, y:2}){
+            this.x = x;
+            this.y = y;
+            this.color = color;
+            this.radius = radius
+            this.speed = speed
+            this.draw()
+
+        }
+        move(){
+            this.draw()
+            if(this.x - this.radius - canvas.width > 0){
+                this.speed.x = -1 * this.speed.x
+            }
+            if(this.y + this.radius - canvas.height > 0){
+                this.speed.y = -1 * this.speed.y
+            }
+            if(this.x - this.radius < 0){
+                this.speed.x = -1 * this.speed.x
+            }
+            if(this.y - this.radius< 0){
+                this.speed.y = -1 * this.speed.y
+            }
+
+            this.x += this.speed.x
+            this.y += this.speed.y
+        }
+        draw(){
+            var gradient = ctx.createLinearGradient(0, 0, 170, 0);
+            gradient.addColorStop("0", "magenta");
+            gradient.addColorStop("0.5" ,"blue");
+            gradient.addColorStop("1.0", "red");
+            ctx.fillStyle = this.color
+            ctx.strokeStyle = gradient;
+            ctx.beginPath()
+            ctx.arc(this.x,this.y, this.radius, 0, 2*Math.PI, false)
+            ctx.fill()
+            ctx.stroke()
+
+
+        }
+    }
+    balls = []
+    function newball(){
+        const x = Math.random() * canvas.width
+        const y = Math.random() * canvas.height
+        const radius = Math.random() * 4 + 3
+        speed = {
+            x: 0.6,
+            y: 0.6,
+        }
+        let color1 = Math.random() * 200
+        let color2 = Math.random() * 200
+        const color = `rgba(57, ${color1}, ${color2}, 1)`
+        const ball = new Ball(x, y, radius, color, speed)
+        balls.push(ball)
+    }
+    const canvas = document.getElementById('canvas-id')
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = "purple"
+    ctx.fillRect(0,0, canvas.width,canvas.height)
+    let animationId = null
+    let intervalId = null
+    function animate() {
+        animationId = requestAnimationFrame(animate)
+        ctx.fillStyle = "rgba(0, 0, 0, 0.1)"
+        ctx.fillRect(0,0, canvas.width,canvas.height)
+        balls.forEach((elem)=>{
+            elem.move()
+        })
+        if(balls.length >= 15){
+            clearInterval(intervalId)
+        }
+    }
+
+    let curr = 'X'
+    let timer = 59
+    let isplaying = false
+    function createTable(){
+        const rows = 3
+        const column = 3
+        const table = document.getElementById('table')
+        let ind = 1
+        for(let i = 1; i <= rows ; i++){
+            const row = document.createElement('tr')
+            row.classList.add("row")
+            table.appendChild(row)
+            for(let j = 1; j <= column; j++){
+                let value = document.createElement('td')
+                row.appendChild(value)
+                value.id = (ind).toString()
+                value.classList.add("column")
+                ind += 1
+                value.onclick = function() { option(value); };
+            }
+        }
+    }
+
+    createTable()
+
+    function start(el){
+        if(!isplaying) {
+            isplaying = true
+            elem = document.getElementById("start")
+            // elem.style.border = "3px rgba(170, 255, 127, 0.57)"
+            // elem.style.borderStyle = "groove";
+            intervalId = setInterval(newball, 1000)
+            setTimeout(update_timer)
+            animate()
+        }
+    }
+
+    function option(el) {
+        if (isplaying) {
+            const elem = document.getElementById(el.id)
+            if (elem.textContent == '') {
+                curr = elem.textContent = (curr == 'X') ? 'O' : 'X'
+            }
+        }
+    }
+    function restart(elem){
+        isplaying = false
+        timer = 60
+        for(let i = 1; i<10; i++){
+            element = document.getElementById(i.toString())
+            element.textContent = ''
+        }
+        removeAnimation()
+    }
+
+    function removeAnimation(){
+        balls = []
+        ctx.fillRect(0,0, canvas.width,canvas.height)
+        clearInterval(intervalId)
+        cancelAnimationFrame(animationId)
+    }
+    function update_timer(){
+        const interval = setInterval(()=>{
+            elem = document.getElementById('timer')
+            elem.textContent = timer.toString()
+            if(timer <= 0 || !isplaying){
+                clearInterval(interval)
+                removeAnimation()
+            }
+            timer -= 1
+        }, 1000)
+    }
+    </script>
+
+</html>
